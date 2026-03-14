@@ -1,84 +1,67 @@
 #pragma once
-
-#include <cstddef>
-#include <cstdint>
 #include "buffer.hpp"
+#include "player.hpp"
+#include "enemy.hpp"
+#include "bullet.hpp"
+#include "item.hpp"
+#include "ui.hpp"
+#include "stage.hpp"
+#include "config.h"
+#include <cstddef>
 
 struct InputState;
 
-#define GAME_MAX_BULLETS 256
-
-// 外星人类型
-enum AlienType : uint8_t {
-    ALIEN_DEAD   = 0,
-    ALIEN_TYPE_A = 1,  // 8x8,  30分
-    ALIEN_TYPE_B = 2,  // 11x8, 20分
-    ALIEN_TYPE_C = 3,  // 12x8, 10分
-};
-
-// 游戏阶段
+// 游戏全局阶段
 enum GamePhase {
-    PHASE_PLAYING,
-    PHASE_WIN,
-    PHASE_LOSE,
+    PHASE_TITLE,    // 主菜单
+    PHASE_PLAYING,  // 游戏中
+    PHASE_PAUSE,    // 暂停
+    PHASE_CLEAR,    // 关卡结算
+    PHASE_WIN,      // 全通关胜利
+    PHASE_LOSE,     // 失败
 };
 
-struct Alien {
-    size_t x, y;
-    uint8_t type;
-};
-
-struct Player {
-    size_t x, y;
-    int hp;   // 血量 0-100
-};
-
-struct Bullet {
-    size_t x, y;
-    int dir;  // 正=向上，负=向下
-};
-
-struct SpriteAnimation {
-    bool loop;
-    size_t num_frames;
-    size_t frame_duration;
-    size_t time;
-    const Sprite** frames;
-};
+// 滚动星空粒子
+struct Star { int x,y,speed; uint8_t brightness; };
 
 struct Game {
-    size_t width, height;
-
-    // --- 精灵组 ---
-    // 外星人组
-    size_t num_aliens;
-    Alien*   aliens;
-    uint8_t* death_counters;
-
-    // 玩家组
-    Player player;
-
-    // 玩家子弹组
-    Bullet player_bullets[GAME_MAX_BULLETS];
-    size_t num_player_bullets;
-
-    // 敌机子弹组
-    Bullet enemy_bullets[GAME_MAX_BULLETS];
-    size_t num_enemy_bullets;
-
-    // --- 得分与状态 ---
-    size_t    score;
+    int       width, height;
     GamePhase phase;
+    Difficulty difficulty;
+    int       stage;        // 当前关卡 1-3
+    int       frame_count;
 
-    // --- 外星人移动 ---
-    int    alien_dir;
-    size_t alien_move_timer;
+    // 得分
+    size_t score;
+    int    combo;
+    int    combo_timer;
+    int    kills;
+    int    shots_fired;
+    int    shots_hit;
+    int    stage_timer;
 
-    // --- 敌机射击计时 ---
-    size_t alien_shoot_timer;
+    // 屏幕震动
+    int    shake_timer;
+    int    shake_x, shake_y;
+
+    // 子系统
+    Player        player;
+    EnemyManager  enemies;
+    BulletManager bullets;
+    ItemManager   items;
+    StageManager  stage_mgr;
+
+    // 星空
+    Star stars[128];
+
+    // 结算
+    ClearStats clear_stats;
+
+    // 菜单
+    int menu_diff_sel;
 };
 
-void game_init(Game* game, size_t width, size_t height);
-void game_update(Game* game, InputState* input);
-void game_render(const Game* game, Buffer* buffer);
-void game_shutdown(Game* game);
+void game_init(Game* g, int width, int height);
+void game_update(Game* g, InputState* input);
+void game_render(const Game* g, Buffer* buf);
+void game_shutdown(Game* g);

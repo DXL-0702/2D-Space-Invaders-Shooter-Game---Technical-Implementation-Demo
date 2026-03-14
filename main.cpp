@@ -9,6 +9,7 @@
 #include "buffer.hpp"
 #include "game.hpp"
 #include "input.hpp"
+#include "stage.hpp"
 
 void error_callback(int error, const char* description) 
 {
@@ -90,7 +91,7 @@ int main() {
 
     // Part 3: 初始化游戏和输入
     Game game;
-    game_init(&game, buffer_width, buffer_height);
+    game_init(&game, (int)buffer_width, (int)buffer_height);
     InputState* input = input_setup(window);
 
     const char* vertex_shader =
@@ -211,8 +212,9 @@ int main() {
         }
         last_time = glfwGetTime();
 
-        // 1. CPU 端：清空缓冲区 (绿色背景)
-        buffer_clear(&buffer, clear_color);
+        // 1. CPU 端：按关卡背景色清空缓冲区
+        uint32_t bg = stage_bg_color(game.stage);
+        buffer_clear(&buffer, bg);
 
         // 2. 更新游戏逻辑（只在 PLAYING 阶段更新）
         game_update(&game, input);
